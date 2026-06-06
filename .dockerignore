@@ -1,7 +1,35 @@
+# =====================================================================
+# ARQUIVO .dockerignore (Lista de exclusão de arquivos no Build)
+# =====================================================================
+
+# Exclui a pasta de dependências do Node.js.
+# O container fará sua própria instalação (npm ci) para garantir compatibilidade
+# e evitar carregar gigabytes de arquivos desnecessários no contexto de build do Docker.
+node_modules
+
+# Exclui as pastas geradas pela compilação local (como a dist/ do Vite).
+# Garante que o estágio de build no Dockerfile compile o código de forma limpa.
+dist
+build
+
+# Exclui o diretório de versionamento do Git e arquivos relacionados.
+# Reduz o tamanho final da imagem e evita o vazamento de chaves ou históricos.
 .git
 .gitignore
-.dockerignore
-README.md
+
+# Exclui os arquivos de receitas do próprio Docker.
+# Eles não são necessários para a execução interna da aplicação web.
 Dockerfile
 docker-compose.yml
-node_modules
+.dockerignore
+
+# Exclui arquivos de documentação e notas.
+README.md
+walkthrough.md
+task.md
+implementation_plan.md
+
+# Exclui arquivos e credenciais locais que contenham dados confidenciais.
+.env
+.env.*
+*.log

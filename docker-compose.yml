@@ -1,7 +1,27 @@
+# Define a versão de especificação da sintaxe do Compose.
+# A versão 3.8 é a mais compatível e recomendada para ambientes modernos do Docker.
+version: '3.8'
+
+# Inicia o bloco de declaração de todos os serviços (containers) que compõem o sistema.
 services:
+
+  # Nome amigável do serviço que define o container do nosso aplicativo web.
   learning-docker:
+    
+    # Especifica onde encontrar o Dockerfile para construir a imagem localmente.
+    # O ponto (.) indica que o Dockerfile está localizado no mesmo diretório deste arquivo compose.
     build: .
+
+    # Atribui um nome fixo e amigável para identificar o container ativo no sistema.
     container_name: learning_docker_app
+
+    # Faz o mapeamento de portas entre a máquina física (Host) e o container.
+    # Formato: "porta_do_host:porta_do_container"
+    # Acessar http://localhost:8080 no seu computador redireciona para a porta 80 do Nginx no container.
     ports:
       - "8080:80"
+
+    # Define a política de reinicialização automática do container.
+    # 'unless-stopped' garante que se o container falhar ou se o Docker Host reiniciar,
+    # o container subirá de volta sozinho, exceto se você o parou manualmente (docker stop).
     restart: unless-stopped
