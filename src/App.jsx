@@ -203,7 +203,7 @@ const flagsList = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('o-que-e');
-  const [selectedInstruction, setSelectedInstruction] = useState(syntaxDictionary['FROM']);
+  const [selectedInstruction, setSelectedInstruction] = useState(null);
   const [activeDeployStep, setActiveDeployStep] = useState(1);
 
   // Estados dos Simuladores
@@ -1265,42 +1265,52 @@ services:
                 <div className="code-file-box">
                   <div className="file-header">docker-compose.yml</div>
                   <div className="file-content">
+                    <div className="line-comment"># Versão do esquema de composição</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['version'])}>
                       <span className="keyword">version</span>: '3.8'
                     </div>
+                    <div className="line-comment"># Declaração dos containers/serviços</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['services'])}>
                       <span className="keyword">services</span>:
                     </div>
+                    <div className="line-comment"># Nome do container/serviço local</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['web-app'])}>
                       &nbsp;&nbsp;<span className="keyword">web-app</span>:
                     </div>
+                    <div className="line-comment"># Constrói imagem usando Dockerfile da pasta local</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['build'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">build</span>: .
                     </div>
+                    <div className="line-comment"># Nome da imagem de build gerada</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['image'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">image</span>: node-app:1.0
                     </div>
+                    <div className="line-comment"># Mapeamento de portas (host:container)</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['ports'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">ports</span>:
                     </div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['ports'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "8080:3000"
                     </div>
+                    <div className="line-comment"># Variáveis de ambiente no container</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['environment'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">environment</span>:
                     </div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['environment'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- DB_HOST=db
                     </div>
+                    <div className="line-comment"># Pasta sincronizada (host:container)</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['volumes'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">volumes</span>:
                     </div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['volumes'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- .:/usr/src/app
                     </div>
+                    <div className="line-comment"># Reinício automático em falhas</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['restart'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">restart</span>: unless-stopped
                     </div>
+                    <div className="line-comment"># Redes virtuais do container</div>
                     <div className="interactive-line" onClick={() => setSelectedInstruction(syntaxDictionary['networks'])}>
                       &nbsp;&nbsp;&nbsp;&nbsp;<span className="keyword">networks</span>:
                     </div>

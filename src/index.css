@@ -662,11 +662,12 @@ body {
    ===================================================================== */
 .syntax-explorer-layout {
   display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
 .code-files-grid {
-  flex: 3;
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -723,8 +724,7 @@ body {
 }
 
 .syntax-details-pane {
-  flex: 2;
-  min-width: 280px;
+  width: 100%;
 }
 
 .detail-card {
