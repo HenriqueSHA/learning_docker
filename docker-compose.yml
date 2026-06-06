@@ -1,0 +1,7 @@
+services:
+  learning-docker:
+    build: .
+    container_name: learning_docker_app
+    ports:
+      - "8080:80"
+    restart: unless-stopped

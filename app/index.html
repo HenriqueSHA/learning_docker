@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Learn Lab - Aprenda de Forma Didática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="container"></i>
+                </div>
+                <h2>Docker<span>Lab</span></h2>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="intro">
+                    <i data-lucide="help-circle"></i>
+                    <span>O que é Docker?</span>
+                </button>
+                <button class="nav-btn" data-target="architecture">
+                    <i data-lucide="layers"></i>
+                    <span>VM vs Container</span>
+                </button>
+                <button class="nav-btn" data-target="pillars">
+                    <i data-lucide="cpu"></i>
+                    <span>Pilares do Kernel</span>
+                </button>
+                <button class="nav-btn" data-target="lifecycle">
+                    <i data-lucide="refresh-cw"></i>
+                    <span>Ciclo do Docker</span>
+                </button>
+                <button class="nav-btn" data-target="installation">
+                    <i data-lucide="download"></i>
+                    <span>Instalação & Comandos</span>
+                </button>
+                <button class="nav-btn" data-target="flags">
+                    <i data-lucide="sliders"></i>
+                    <span>Flags do Docker</span>
+                </button>
+                <button class="nav-btn" data-target="code-writing">
+                    <i data-lucide="file-code"></i>
+                    <span>Escrevendo Docker</span>
+                </button>
+                <button class="nav-btn" data-target="playground">
+                    <i data-lucide="terminal"></i>
+                    <span>Playground Terminal</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>Criado para ensinar Docker de forma prática.</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1 id="page-title">Introdução ao Docker</h1>
+                <div class="status-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Ambiente Virtualizado</span>
+                </div>
+            </header>
+
+            <!-- Sections -->
+            <div class="content-body">
+                
+                <!-- Section 1: Intro -->
+                <section id="sec-intro" class="content-section active">
+                    <div class="hero-card">
+                        <div class="hero-text">
+                            <h3>Diga adeus ao "Na minha máquina funciona" 🚀</h3>
+                            <p>O Docker é uma plataforma de virtualização em nível de sistema operacional (containers) que permite empacotar uma aplicação e todas as suas dependências em um único pacote isolado chamado container.</p>
+                        </div>
+                        <div class="hero-graphic">
+                            <div class="container-box">
+                                <i data-lucide="box"></i>
+                                <span class="label">Minha App + Dependências</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="icon-wrapper color-1">
+                                <i data-lucide="shield"></i>
+                            </div>
+                            <h4>Isolamento Completo</h4>
+                            <p>Cada container roda de forma isolada do sistema hospedeiro e de outros containers. Eles compartilham o Kernel do sistema, mas têm arquivos, variáveis e processos separados.</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="icon-wrapper color-2">
+                                <i data-lucide="zap"></i>
+                            </div>
+                            <h4>Leve e Rápido</h4>
+                            <p>Como não rodam um sistema operacional completo dentro de si, iniciam em milissegundos e utilizam pouquíssima memória comparados com Máquinas Virtuais.</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="icon-wrapper color-3">
+                                <i data-lucide="git-branch"></i>
+                            </div>
+                            <h4>Consistência</h4>
+                            <p>O mesmo container rodando no seu computador pessoal rodará de forma exatamente igual no servidor de produção ou nuvem.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Architecture -->
+                <section id="sec-architecture" class="content-section">
+                    <div class="intro-block">
+                        <p>Para entender o Docker, precisamos entender a grande diferença entre a virtualização tradicional (Máquinas Virtuais) e a virtualização baseada em containers.</p>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <!-- VM Architecture -->
+                        <div class="arch-card">
+                            <h4>Máquina Virtual (VM)</h4>
+                            <p class="subtitle">Virtualização de Hardware</p>
+                            
+                            <div class="stack-visual">
+                                <div class="stack-layer app-layer">Aplicações (App A, App B)</div>
+                                <div class="stack-layer libs-layer">Bibliotecas / Dependências</div>
+                                <div class="stack-layer os-layer guest">Guest OS (Sistema Operacional Convidado)</div>
+                                <div class="stack-layer hypervisor-layer">Hypervisor (e.g. VirtualBox, VMware)</div>
+                                <div class="stack-layer host-layer">Host OS & Kernel da Máquina</div>
+                            </div>
+                            <div class="arch-description">
+                                <ul>
+                                    <li><i data-lucide="alert-triangle"></i> Consome muitos gigabytes (precisa de um SO inteiro para cada VM).</li>
+                                    <li><i data-lucide="alert-triangle"></i> Lento para iniciar (minutos).</li>
+                                    <li><i data-lucide="alert-triangle"></i> Duplica a simulação do Kernel e drivers.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Container Architecture -->
+                        <div class="arch-card highlighted">
+                            <h4>Container Docker</h4>
+                            <p class="subtitle">Virtualização de Sistema Operacional</p>
+                            
+                            <div class="stack-visual">
+                                <div class="stack-layer app-layer">Aplicações (App A, App B)</div>
+                                <div class="stack-layer libs-layer">Bibliotecas / Dependências</div>
+                                <div class="stack-layer docker-layer">Docker Engine</div>
+                                <div class="stack-layer host-layer shared">Host OS & Kernel Compartilhado</div>
+                            </div>
+                            <div class="arch-description">
+                                <ul>
+                                    <li><i data-lucide="check-circle-2"></i> Extremamente leve (apenas alguns megabytes).</li>
+                                    <li><i data-lucide="check-circle-2"></i> Inicialização instantânea (milissegundos).</li>
+                                    <li><i data-lucide="check-circle-2"></i> Usa o Kernel da máquina hospedeira.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Pillars -->
+                <section id="sec-pillars" class="content-section">
+                    <div class="intro-block">
+                        <p>Como o Docker consegue rodar aplicações de forma tão isolada compartilhando o mesmo Kernel? O segredo está em recursos nativos do próprio Kernel Linux:</p>
+                    </div>
+
+                    <div class="pillars-container">
+                        <div class="pillar-card">
+                            <div class="pillar-header">
+                                <i data-lucide="folder-git-2"></i>
+                                <h3>Namespaces</h3>
+                            </div>
+                            <p class="pillar-desc">Cria uma <strong>parede visual</strong>. Ele delimita o que um container consegue enxergar do sistema. Ele faz o container acreditar que tem seu próprio sistema exclusivo.</p>
+                            
+                            <div class="namespaces-simulator">
+                                <div class="sim-controls">
+                                    <button class="sim-btn active" id="toggle-namespace">Isolar Namespace</button>
+                                </div>
+                                <div class="namespaces-display">
+                                    <div class="host-view">
+                                        <h5>Máquina Host</h5>
+                                        <div class="process-list" id="host-processes">
+                                            <div class="proc-badge">PID 1: Systemd</div>
+                                            <div class="proc-badge">PID 45: Chrome</div>
+                                            <div class="proc-badge proc-container">PID 102: Node.js (App)</div>
+                                            <div class="proc-badge proc-container">PID 105: Nginx (App)</div>
+                                        </div>
+                                    </div>
+                                    <div class="container-view">
+                                        <h5>Visão do Container</h5>
+                                        <div class="process-list" id="container-processes">
+                                            <div class="proc-badge proc-container" id="container-proc-1">PID 1: Node.js (App)</div>
+                                            <div class="proc-badge proc-container" id="container-proc-2">PID 2: Nginx (App)</div>
+                                            <div class="proc-badge disabled" id="host-leak-proc">PID 45: Chrome</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="footnote">O container enxerga a si mesmo como o PID 1 (o início de tudo), embora no host ele seja apenas mais um processo comum. Tipos de Namespaces: PID (Processos), NET (Redes), MNT (Pontos de Montagem), IPC (Comunicação), UTS (Hostnames), USER (Usuários).</span>
+                        </div>
+
+                        <div class="pillar-card">
+                            <div class="pillar-header">
+                                <i data-lucide="sliders"></i>
+                                <h3>Control Groups (cgroups)</h3>
+                            </div>
+                            <p class="pillar-desc">Cria uma <strong>parede de recursos</strong>. Ele define o quanto o container pode consumir da máquina host. Evita que um container consuma toda a CPU ou memória RAM e derrube a máquina.</p>
+                            
+                            <div class="cgroups-simulator">
+                                <div class="cgroup-control">
+                                    <label for="cpu-limit">Limite de CPU para o Container: <span id="cpu-val">100%</span></label>
+                                    <input type="range" id="cpu-limit" min="10" max="100" value="100">
+                                </div>
+                                <div class="resource-visual">
+                                    <div class="resource-bar">
+                                        <div class="bar-fill container-fill" id="container-cpu-bar">Container: 10%</div>
+                                        <div class="bar-fill host-fill" id="host-cpu-bar">Outros Processos: 40%</div>
+                                    </div>
+                                    <button class="sim-btn" id="simulate-load">Simular Carga de Trabalho</button>
+                                </div>
+                            </div>
+                            <span class="footnote">Com os cgroups, garantimos que mesmo sob ataque ou falha de código (como loop infinito), o container nunca extrapolará seus limites alocados.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Lifecycle -->
+                <section id="sec-lifecycle" class="content-section">
+                    <div class="intro-block">
+                        <p>O fluxo de trabalho do Docker gira em torno de 4 conceitos fundamentais que transformam código fonte em uma aplicação rodando em qualquer lugar do mundo.</p>
+                    </div>
+
+                    <div class="lifecycle-steps">
+                        <div class="step-card">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Dockerfile</h4>
+                                <p class="step-text">É a <strong>receita de bolo</strong>. Um arquivo de texto com instruções sequenciais que descrevem como construir o ambiente de execução da aplicação.</p>
+                                <pre><code class="language-docker">FROM node:alpine
+WORKDIR /app
+COPY . .
+RUN npm install
+CMD ["node", "app.js"]</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Imagem</h4>
+                                <p class="step-text">É o <strong>bolo congelado</strong>. Um arquivo estático, somente leitura, gerado a partir do Dockerfile. Contém o código, bibliotecas e dependências prontos.</p>
+                                <div class="image-layers">
+                                    <span class="layer-badge">Camada: Código da App</span>
+                                    <span class="layer-badge">Camada: Dependências npm</span>
+                                    <span class="layer-badge">Camada: Node runtime</span>
+                                    <span class="layer-badge">Camada: SO Alpine Linux</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Registro</h4>
+                                <p class="step-text">É o <strong>supermercado de bolos</strong>. Uma nuvem pública ou privada onde você guarda e compartilha suas imagens criadas. Ex: Docker Hub, AWS ECR.</p>
+                                <div class="hub-visual">
+                                    <i data-lucide="cloud-lightning"></i>
+                                    <span>docker pull minha-imagem:latest</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Container</h4>
+                                <p class="step-text">É o <strong>bolo servido e pronto para comer</strong>. A imagem em execução. Um container é uma instância ativa de uma imagem.</p>
+                                <div class="running-container-badge">
+                                    <i data-lucide="play-circle"></i>
+                                    <span>Container: Online - Porta 8080</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4.5: Installation & Basic Commands -->
+                <section id="sec-installation" class="content-section">
+                    <div class="intro-block">
+                        <p>Para começar a usar o Docker, o primeiro passo é instalá-lo no seu sistema operacional. O Docker está disponível como <strong>Docker Desktop</strong> (Windows e macOS) e <strong>Docker Engine</strong> (Linux).</p>
+                    </div>
+
+                    <div class="install-grid">
+                        <div class="info-card">
+                            <h4>Linux (Ubuntu/Debian)</h4>
+                            <p>Instalação nativa via terminal:</p>
+                            <pre><code class="language-bash">sudo apt update
+sudo apt install docker.io
+sudo systemctl enable --now docker</code></pre>
+                        </div>
+                        <div class="info-card">
+                            <h4>Windows & macOS</h4>
+                            <p>Instale o <strong>Docker Desktop</strong>, que fornece uma interface gráfica completa e gerencia a máquina virtual do Linux nos bastidores.</p>
+                            <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="sim-btn" style="text-decoration:none; display:inline-block; margin-top:0.8rem; text-align:center;">Download Docker Desktop</a>
+                        </div>
+                    </div>
+
+                    <div class="after-install-banner">
+                        <i data-lucide="check-circle-2"></i>
+                        <div>
+                            <strong>Guia Completo de Comandos Docker 📋</strong>
+                            <p>Domine o ciclo de vida completo de containers, desde o build até a publicação e descarte de recursos locais ou remotos.</p>
+                        </div>
+                    </div>
+
+                    <div class="commands-category-section">
+                        <h4 class="category-title"><i data-lucide="image"></i> 1. Criação & Tagging de Imagens</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker build -t usuario/app:1.0 .</code>
+                                    <span class="badge badge-success">Build</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Constrói uma imagem baseada nas instruções do <code>Dockerfile</code> localizado no diretório atual (<code>.</code>) e atribui a tag <code>usuario/app:1.0</code>.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker tag local-app:latest usuario/app:1.0</code>
+                                    <span class="badge">Tag</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Cria uma referência ou alias com o formato do Docker Hub (<code>usuario/repositorio:tag</code>) a partir de uma imagem local existente.</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="cloud"></i> 2. Publicação & Distribuição (Docker Hub)</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker login</code>
+                                    <span class="badge">Auth</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Realiza a autenticação de segurança no registro (por padrão, o Docker Hub) usando o seu usuário e senha de acesso.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker push usuario/app:1.0</code>
+                                    <span class="badge badge-success">Push</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Envia a imagem local para o seu repositório no Docker Hub, deixando-a disponível para download público ou privado.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker pull usuario/app:1.0</code>
+                                    <span class="badge badge-warning">Pull</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Baixa do repositório remoto a imagem especificada para a sua máquina local (sem executá-la).</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="play"></i> 3. Execução & Mapeamento</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker run -d -p 8080:80 --name webapp app</code>
+                                    <span class="badge badge-success">Background</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Cria e inicia o container em segundo plano (<code>-d</code>), mapeia a porta do host para a interna (<code>-p 8080:80</code>) e define o nome amigável <code>webapp</code>.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker run -it --rm -e ENV=prod ubuntu bash</code>
+                                    <span class="badge badge-warning">Interactive</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Inicia de forma interativa (<code>-it</code>), injeta uma variável de ambiente (<code>-e</code>), executa o shell <code>bash</code> e destrói o container automaticamente ao sair (<code>--rm</code>).</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="eye"></i> 4. Interação & Inspeção</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker exec -it webapp bash</code>
+                                    <span class="badge badge-success">Exec</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Abre um terminal interativo (<code>-it</code>) rodando o shell <code>bash</code> dentro de um container que já está ativo na máquina.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker logs webapp</code>
+                                    <span class="badge">Logs</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Exibe a saída padrão (stdout/stderr) do container. Mostra tudo que a aplicação imprimiu no console.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker inspect webapp</code>
+                                    <span class="badge">Inspect</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Retorna uma estrutura JSON detalhada contendo todas as configurações, volumes e redes internas do container.</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="activity"></i> 5. Monitoramento & Estado</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker ps</code>
+                                    <span class="badge badge-success">Ativos</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Lista todos os containers que estão ativos e rodando neste momento na máquina.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker ps -a</code>
+                                    <span class="badge badge-warning">Histórico</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Mostra o histórico de todos os containers criados (ativos, parados ou que sofreram erro de execução).</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker stats</code>
+                                    <span class="badge">Stats</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Exibe em tempo real o consumo de recursos (CPU, Memória RAM, I/O de disco e rede) de todos os containers ativos.</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="trash-2"></i> 6. Descarte & Limpeza</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker stop webapp</code>
+                                    <span class="badge badge-error">Stop</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Envia um sinal de encerramento amigável (SIGTERM) para parar de rodar a aplicação interna do container.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker rm webapp</code>
+                                    <span class="badge badge-error">Remover Container</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Exclui do sistema o container. Ele precisa estar parado para que este comando funcione.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker rmi app:1.0</code>
+                                    <span class="badge badge-error">Remover Imagem</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Exclui a imagem do seu HD local. Só funciona se nenhuma instância de container estiver baseada nela.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker system prune -a</code>
+                                    <span class="badge badge-error">Prune Completo</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Executa uma limpeza total no disco, apagando todos os containers parados, redes não usadas e imagens em cache locais.</p>
+                            </div>
+                        </div>
+
+                        <h4 class="category-title"><i data-lucide="server"></i> 7. Orquestração com Compose</h4>
+                        <div class="commands-flow">
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker compose up -d</code>
+                                    <span class="badge badge-success">Up</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Lê o arquivo <code>docker-compose.yml</code> do diretório, baixa/compila as imagens necessárias e inicia todos os serviços em background.</p>
+                            </div>
+                            <div class="command-card">
+                                <div class="command-header-title">
+                                    <code>docker compose down</code>
+                                    <span class="badge badge-error">Down</span>
+                                </div>
+                                <p><strong>O que faz:</strong> Para e remove de forma coordenada todos os containers, redes virtuais e volumes associados criados pelo <code>docker compose up</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4.6: Flags & Interactivity -->
+                <section id="sec-flags" class="content-section">
+                    <div class="intro-block">
+                        <p>O Docker ganha superpoderes através de suas flags de comando. Aqui explicamos como funciona o mapeamento de portas, a interatividade no terminal, os processos internos e apresentamos um guia completo das flags essenciais.</p>
+                    </div>
+
+                    <div class="flags-grid">
+                        <!-- Port Mapping -->
+                        <div class="info-card">
+                            <div class="icon-wrapper color-2">
+                                <i data-lucide="network"></i>
+                            </div>
+                            <h4>Como funcionam as portas (-p)</h4>
+                            <p>Containers rodam em redes virtuais isoladas. Para acessá-los de fora (e.g., no seu navegador do host), você precisa mapear uma porta da máquina host para a porta do container.</p>
+                            <div class="port-viz">
+                                <div class="port-box">Host OS (Seu PC)<br><strong>Porta 8080</strong></div>
+                                <i data-lucide="arrow-right"></i>
+                                <div class="port-box accent">Container (Docker)<br><strong>Porta 80</strong></div>
+                            </div>
+                            <pre><code class="language-bash">docker run -p 8080:80 nginx</code></pre>
+                            <span class="footnote">Isto cria um túnel: requisições na porta 8080 do seu PC são enviadas para a porta 80 do Nginx dentro do container.</span>
+                        </div>
+
+                        <!-- Interactivity & terminal -->
+                        <div class="info-card">
+                            <div class="icon-wrapper color-1">
+                                <i data-lucide="terminal"></i>
+                            </div>
+                            <h4>Como interagir com um container (-it)</h4>
+                            <p>Para interagir com um container e rodar comandos diretamente no terminal dele, usamos as flags:</p>
+                            <ul>
+                                <li><code>-i</code> (interactive): Mantém o canal de entrada (STDIN) aberto para digitação.</li>
+                                <li><code>-t</code> (tty): Aloca um terminal virtual (pseudo-TTY) para simular o terminal Linux.</li>
+                            </ul>
+                            <div class="explain-box">
+                                <strong>Entendendo o comando:</strong>
+                                <code>docker run -it ubuntu bash</code>
+                                <p>Cria um container a partir da imagem oficial do Ubuntu, conecta seu teclado/terminal a ele e roda o shell <code>bash</code>. Você entra "dentro" do container Ubuntu.</p>
+                            </div>
+                        </div>
+
+                        <!-- Creating images & processes -->
+                        <div class="info-card">
+                            <div class="icon-wrapper color-3">
+                                <i data-lucide="cpu"></i>
+                            </div>
+                            <h4>Criação de imagem e Processos</h4>
+                            <p><strong>Criando uma imagem:</strong> Usamos <code>docker build -t minha-imagem .</code>. A flag <code>-t</code> serve para dar uma tag/nome à imagem e o ponto <code>.</code> indica o contexto/pasta onde o Dockerfile e arquivos estão localizados.</p>
+                            <p><strong>Processos no container:</strong> Um container roda em cima do OS host, mas possui processos isolados. O container só fica ativo enquanto seu processo principal (PID 1) estiver ativo. Se você rodar <code>docker run -it ubuntu bash</code> e digitar <code>exit</code>, o processo bash (PID 1) termina e o container desliga.</p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Flags Dictionary Table -->
+                    <div class="flags-table-container">
+                        <h3>Dicionário das Flags mais Utilizadas</h3>
+                        <p class="table-subtitle">As flags modificam o comportamento do comando <code>docker run</code>. Abaixo estão as mais comuns no dia a dia:</p>
+                        
+                        <div class="table-responsive">
+                            <table class="flags-table">
+                                <thead>
+                                    <tr>
+                                        <th>Flag</th>
+                                        <th>Nome Completo</th>
+                                        <th>O que faz</th>
+                                        <th>Quando usar</th>
+                                        <th>Exemplo de Uso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>-d</code></td>
+                                        <td><code>--detach</code></td>
+                                        <td>Executa o container em segundo plano (background) e libera o terminal.</td>
+                                        <td>Servidores Web, bancos de dados e serviços persistentes.</td>
+                                        <td><code>docker run -d nginx</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>-p</code></td>
+                                        <td><code>--publish</code></td>
+                                        <td>Conecta uma porta da máquina host a uma porta interna do container.</td>
+                                        <td>Quando precisa acessar o serviço pelo navegador (ex: localhost:8080).</td>
+                                        <td><code>docker run -p 8080:80 nginx</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>-it</code></td>
+                                        <td><code>-i --tty</code></td>
+                                        <td>Mantém o terminal interativo conectado para digitação.</td>
+                                        <td>Para explorar pastas ou debugar executando comandos manuais.</td>
+                                        <td><code>docker run -it ubuntu bash</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>--name</code></td>
+                                        <td><code>--name</code></td>
+                                        <td>Atribui um nome customizado e único ao container.</td>
+                                        <td>Para evitar gerenciar o container através de hashes hexadecimais longos.</td>
+                                        <td><code>docker run --name web-nginx nginx</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>--rm</code></td>
+                                        <td><code>--rm</code></td>
+                                        <td>Remove o container automaticamente assim que ele finaliza.</td>
+                                        <td>Para tarefas temporárias, testes rápidos ou scripts de execução única.</td>
+                                        <td><code>docker run --rm hello-world</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>-v</code></td>
+                                        <td><code>--volume</code></td>
+                                        <td>Compartilha pastas entre o computador host e o container.</td>
+                                        <td>Para desenvolvimento local (hot-reload) ou salvar dados persistentes.</td>
+                                        <td><code>docker run -v $(pwd):/app node</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>-e</code></td>
+                                        <td><code>--env</code></td>
+                                        <td>Define variáveis de ambiente no container em tempo de execução.</td>
+                                        <td>Passar chaves de APIs, credenciais ou variáveis de configuração dinâmicas.</td>
+                                        <td><code>docker run -e DB_PASS=123 mysql</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>--restart</code></td>
+                                        <td><code>--restart</code></td>
+                                        <td>Define políticas de reinicialização automática do container.</td>
+                                        <td>Garantir que serviços voltem a rodar se caírem ou após reboot do PC.</td>
+                                        <td><code>docker run --restart unless-stopped nginx</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4.7: Code Writing -->
+                <section id="sec-code-writing" class="content-section">
+                    <div class="intro-block">
+                        <p>Desenvolver com Docker envolve escrever arquivos de configuração para automatizar o ambiente. Abaixo explicamos as linguagens, regras obrigatórias, boas práticas e a sintaxe de cada arquivo essencial.</p>
+                    </div>
+
+                    <div class="code-writing-grid">
+                        <!-- Setup and tools -->
+                        <div class="info-card wide">
+                            <div class="icon-wrapper color-2">
+                                <i data-lucide="download"></i>
+                            </div>
+                            <h4>Instalação e Componentes: O que roda na sua máquina</h4>
+                            <p>Ao instalar o <strong>Docker Desktop</strong> (no Windows/macOS) ou o <strong>Docker Engine</strong> (no Linux), a sua máquina passa a rodar os seguintes componentes essenciais que trabalham de forma coordenada:</p>
+                            
+                            <div class="tools-list">
+                                <div class="tool-item">
+                                    <div class="tool-icon"><i data-lucide="cpu"></i></div>
+                                    <div class="tool-info">
+                                        <strong>Docker Daemon (dockerd)</strong>
+                                        <span>O serviço em segundo plano (background) que gerencia os containers, baixa as imagens, gerencia redes virtuais e aloca volumes de disco.</span>
+                                    </div>
+                                </div>
+                                <div class="tool-item">
+                                    <div class="tool-icon"><i data-lucide="terminal"></i></div>
+                                    <div class="tool-info">
+                                        <strong>Docker CLI (docker)</strong>
+                                        <span>O utilitário de linha de comando que você digita no terminal. Ele se comunica via API REST com o Docker Daemon para executar as suas ações.</span>
+                                    </div>
+                                </div>
+                                <div class="tool-item">
+                                    <div class="tool-icon"><i data-lucide="blocks"></i></div>
+                                    <div class="tool-info">
+                                        <strong>Docker Compose CLI Plugin</strong>
+                                        <span>Ferramenta orquestradora que permite rodar aplicações multicontainer complexas descritas em um único arquivo de configuração YAML.</span>
+                                    </div>
+                                </div>
+                                <div class="tool-item">
+                                    <div class="tool-icon"><i data-lucide="shield-check"></i></div>
+                                    <div class="tool-info">
+                                        <strong>containerd</strong>
+                                        <span>O motor de execução leve de containers de padrão industrial, responsável por gerenciar o ciclo de vida completo de cada container de forma segura.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Language & Formats -->
+                        <div class="info-card">
+                            <div class="icon-wrapper color-1">
+                                <i data-lucide="code-2"></i>
+                            </div>
+                            <h4>Linguagem e Estrutura</h4>
+                            <p><strong>Dockerfile:</strong> Não usa uma linguagem de programação genérica. Possui sintaxe declarativa própria contendo instruções em letras maiúsculas (ex: <code>FROM</code>, <code>COPY</code>) seguidas de parâmetros. É executado sequencialmente de forma compilada.</p>
+                            <p><strong>docker-compose.yml:</strong> Escrito em formato <strong>YAML</strong>. O YAML usa pares de <code>chave: valor</code> e não utiliza delimitadores como chaves <code>{}</code>. Toda a organização hierárquica é feita estritamente através do <strong>recuo de espaços</strong>.</p>
+                        </div>
+
+                        <!-- Rules and Best Practices -->
+                        <div class="info-card">
+                            <div class="icon-wrapper color-3">
+                                <i data-lucide="check-circle-2"></i>
+                            </div>
+                            <h4>Regras Obrigatórias e Boas Práticas</h4>
+                            <ul>
+                                <li><strong>Regra Obrigatória do YAML:</strong> Apenas espaços são permitidos para identação. Pressionar a tecla TAB causará um erro de compilação. Use 2 espaços extras para declarar propriedades filhas.</li>
+                                <li><strong>Regra do Dockerfile:</strong> A primeira instrução deve obrigatoriamente ser a tag <code>FROM</code>, especificando a imagem que servirá de alicerce.</li>
+                                <li><strong>Use o .dockerignore:</strong> Equivalente ao <code>.gitignore</code>. Ele impede o envio de arquivos e pastas pesadas ou confidenciais (ex: <code>node_modules/</code>, logs, chaves locais) para dentro do container durante o build.</li>
+                                <li><strong>Ordem inteligente das camadas:</strong> Instruções pesadas que mudam pouco devem ficar no início para aproveitar a otimização de cache do Docker.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Syntax Explainer -->
+                    <div class="syntax-explainer">
+                        <h3>Sintaxe e Dicionário de Códigos</h3>
+                        <p class="table-subtitle">Clique nas instruções coloridas dos arquivos abaixo para entender o significado de cada linha. Veja como estruturar e escrever seus arquivos:</p>
+
+                        <div class="syntax-wrapper-three-col">
+                            <!-- Column 1: Dockerfile Explainer -->
+                            <div class="syntax-container">
+                                <h5>1. O Arquivo Dockerfile</h5>
+                                <p class="syntax-desc">A receita estruturada de build da sua imagem.</p>
+                                <div class="code-interactive-box">
+                                    <div class="interactive-line" data-explanation="df-from"><span class="keyword">FROM</span> <span class="arg">node:18-alpine</span></div>
+                                    <div class="interactive-line" data-explanation="df-workdir"><span class="keyword">WORKDIR</span> <span class="arg">/usr/src/app</span></div>
+                                    <div class="interactive-line" data-explanation="df-copy-dep"><span class="keyword">COPY</span> <span class="arg">package*.json ./</span></div>
+                                    <div class="interactive-line" data-explanation="df-run"><span class="keyword">RUN</span> <span class="arg">npm ci --only=production</span></div>
+                                    <div class="interactive-line" data-explanation="df-copy-all"><span class="keyword">COPY</span> <span class="arg">. .</span></div>
+                                    <div class="interactive-line" data-explanation="df-env"><span class="keyword">ENV</span> <span class="arg">PORT=3000</span></div>
+                                    <div class="interactive-line" data-explanation="df-user"><span class="keyword">USER</span> <span class="arg">node</span></div>
+                                    <div class="interactive-line" data-explanation="df-expose"><span class="keyword">EXPOSE</span> <span class="arg">3000</span></div>
+                                    <div class="interactive-line" data-explanation="df-volume"><span class="keyword">VOLUME</span> <span class="arg">/usr/src/app/data</span></div>
+                                    <div class="interactive-line" data-explanation="df-cmd"><span class="keyword">CMD</span> <span class="arg">["node", "server.js"]</span></div>
+                                </div>
+                                <div class="explanation-display" id="df-explain">
+                                    <i data-lucide="info" style="width:14px; height:14px; display:inline-block; margin-right:4px; vertical-align:middle;"></i> Clique em uma instrução do Dockerfile para ler a explicação.
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Docker-Compose Explainer -->
+                            <div class="syntax-container">
+                                <h5>2. O Arquivo docker-compose.yml</h5>
+                                <p class="syntax-desc">O arquivo de orquestração multicontainer.</p>
+                                <div class="code-interactive-box">
+                                    <div class="interactive-line" data-explanation="dc-version"><span class="yaml-key">version:</span> <span class="yaml-val">'3.8'</span></div>
+                                    <div class="interactive-line" data-explanation="dc-services"><span class="yaml-key">services:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-service-name">&nbsp;&nbsp;<span class="yaml-key">web-app:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-build">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">build:</span> <span class="yaml-val">.</span></div>
+                                    <div class="interactive-line" data-explanation="dc-image">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">image:</span> <span class="yaml-val">meu-app-node:latest</span></div>
+                                    <div class="interactive-line" data-explanation="dc-ports">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">ports:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-ports-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-val">- "8080:3000"</span></div>
+                                    <div class="interactive-line" data-explanation="dc-environment">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">environment:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-env-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-val">- DB_HOST=db</span></div>
+                                    <div class="interactive-line" data-explanation="dc-volumes">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">volumes:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-volumes-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-val">- .:/usr/src/app</span></div>
+                                    <div class="interactive-line" data-explanation="dc-restart">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">restart:</span> <span class="yaml-val">unless-stopped</span></div>
+                                    <div class="interactive-line" data-explanation="dc-networks">&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-key">networks:</span></div>
+                                    <div class="interactive-line" data-explanation="dc-networks-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="yaml-val">- rede-app</span></div>
+                                </div>
+                                <div class="explanation-display" id="dc-explain">
+                                    <i data-lucide="info" style="width:14px; height:14px; display:inline-block; margin-right:4px; vertical-align:middle;"></i> Clique em uma propriedade do Compose para ler a explicação.
+                                </div>
+                            </div>
+
+                            <!-- Column 3: .dockerignore Explainer -->
+                            <div class="syntax-container">
+                                <h5>3. O Arquivo .dockerignore</h5>
+                                <p class="syntax-desc">Lista de arquivos e pastas excluídos do build.</p>
+                                <div class="code-interactive-box">
+                                    <div class="interactive-line" data-explanation="di-node"><span class="yaml-key">node_modules/</span></div>
+                                    <div class="interactive-line" data-explanation="di-git"><span class="yaml-key">.git</span></div>
+                                    <div class="interactive-line" data-explanation="di-logs"><span class="yaml-key">*.log</span></div>
+                                    <div class="interactive-line" data-explanation="di-env"><span class="yaml-key">.env</span></div>
+                                    <div class="interactive-line" data-explanation="di-self"><span class="yaml-key">Dockerfile</span></div>
+                                    <div class="interactive-line" data-explanation="di-ignore"><span class="yaml-key">.dockerignore</span></div>
+                                </div>
+                                <div class="explanation-display" id="di-explain">
+                                    <i data-lucide="info" style="width:14px; height:14px; display:inline-block; margin-right:4px; vertical-align:middle;"></i> Clique em uma regra de exclusão para ler a explicação.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Playground -->
+                <section id="sec-playground" class="content-section">
+                    <div class="playground-intro">
+                        <p>Experimente construir e rodar seu primeiro container no nosso terminal virtual! Siga as instruções abaixo do terminal para ver a mágica acontecer.</p>
+                    </div>
+
+                    <div class="playground-wrapper">
+                        <!-- Terminal Simulator -->
+                        <div class="terminal-container">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <span class="dot red"></span>
+                                    <span class="dot yellow"></span>
+                                    <span class="dot green"></span>
+                                </div>
+                                <span class="terminal-title">bash - docker@learning-host:~</span>
+                            </div>
+                            <div class="terminal-body" id="terminal-output">
+                                <div class="term-line"># Bem-vindo ao Docker Playground!</div>
+                                <div class="term-line"># Siga o guia passo-a-passo à direita para aprender os comandos.</div>
+                                <div class="term-line"># Digite 'help' para ajuda ou liste os comandos.</div>
+                                <div class="term-line-input">
+                                    <span class="prompt">docker@host:~$</span>
+                                    <input type="text" id="term-input" autofocus autocomplete="off" spellcheck="false">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Guide & Visualizer -->
+                        <div class="visualizer-panel">
+                            <div class="guide-steps">
+                                <h4>Guia Passo a Passo</h4>
+                                <div class="guide-item active" id="guide-step-1">
+                                    <h5>1. Escreva o Dockerfile</h5>
+                                    <p>Primeiro, crie uma imagem a partir de uma receita de bolo. Digite o comando build:</p>
+                                    <code>docker build -t minha-web-app .</code>
+                                </div>
+                                <div class="guide-item" id="guide-step-2">
+                                    <h5>2. Liste suas Imagens</h5>
+                                    <p>Verifique se a imagem estática foi criada e está salva localmente:</p>
+                                    <code>docker images</code>
+                                </div>
+                                <div class="guide-item" id="guide-step-3">
+                                    <h5>3. Execute o Container</h5>
+                                    <p>Agora instancie a imagem criando um container rodando em segundo plano na porta 8080:</p>
+                                    <code>docker run -d -p 8080:80 minha-web-app</code>
+                                </div>
+                                <div class="guide-item" id="guide-step-4">
+                                    <h5>4. Liste os Containers ativos</h5>
+                                    <p>Verifique o status da sua aplicação rodando em tempo real:</p>
+                                    <code>docker ps</code>
+                                </div>
+                            </div>
+
+                            <div class="visual-sandbox">
+                                <h4>Visualizador do Estado</h4>
+                                <div class="sandbox-display">
+                                    <!-- Dynamic elements appear here -->
+                                    <div class="sandbox-placeholder" id="sandbox-empty">
+                                        <i data-lucide="compass"></i>
+                                        <p>Execute os comandos para visualizar a infraestrutura se formando.</p>
+                                    </div>
+                                    <div class="sandbox-image hidden" id="sandbox-img-card">
+                                        <div class="img-badge">Imagem Docker</div>
+                                        <strong>minha-web-app</strong>
+                                        <span>Tamanho: 42MB</span>
+                                        <span class="state-label">ESTÁTICA (Bolo)</span>
+                                    </div>
+                                    <div class="sandbox-container-box hidden" id="sandbox-container-card">
+                                        <div class="container-badge">Container Ativo</div>
+                                        <strong>minha-web-app-container</strong>
+                                        <span class="ports">Portas: 0.0.0.0:8080->80/tcp</span>
+                                        <span class="running-state">ONLINE (Executando)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
