@@ -205,430 +205,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('o-que-e');
   const [selectedInstruction, setSelectedInstruction] = useState(null);
   const [activeDeployStep, setActiveDeployStep] = useState(1);
-
-  // Estados dos Simuladores
-  const [namespacePid, setNamespacePid] = useState(false);
-  const [namespaceNet, setNamespaceNet] = useState(false);
-  const [cpuLimit, setCpuLimit] = useState(1);
-  const [ramLimit, setRamLimit] = useState(512);
-  const [workloadStatus, setWorkloadStatus] = useState('idle'); // idle, running, oom, success
-  const [workloadProgress, setWorkloadProgress] = useState(0);
+  const [activeLifecycleStep, setActiveLifecycleStep] = useState(1);
 
   // Estados dos Comandos e Filtros
   const [commandSearch, setCommandSearch] = useState('');
   const [commandCategory, setCommandCategory] = useState('Todos');
 
-  // Estados do Terminal Virtual
-  const [terminalHistory, setTerminalHistory] = useState([
-    { type: 'system', text: 'DockerLab Terminal Playground - v1.0.0' },
-    { type: 'system', text: 'Digite "help" para ver os comandos simulados disponíveis.' }
-  ]);
-  const [terminalInput, setTerminalInput] = useState('');
-  const [isUbuntuShell, setIsUbuntuShell] = useState(false);
-  const [isUbuntuCurlInstalled, setIsUbuntuCurlInstalled] = useState(false);
-  const [isTerminalLoading, setIsTerminalLoading] = useState(false);
-  const [terminalLoadingText, setTerminalLoadingText] = useState('');
-  const [terminalLoadingProgress, setTerminalLoadingProgress] = useState(0);
-  
-  // Imagens e containers virtuais do Playground
-  const [virtualImages, setVirtualImages] = useState([
-    { id: '3c44249a5b3a', name: 'nginx', tag: 'alpine', size: '23.5MB' }
-  ]);
-  const [virtualContainers, setVirtualContainers] = useState([]);
 
-  const terminalEndRef = useRef(null);
-
-  useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [terminalHistory, isTerminalLoading, terminalLoadingProgress, terminalLoadingText]);
-
-  // Função para rodar carga de cgroups
-  const startCgroupsSimulation = () => {
-    setWorkloadProgress(0);
-    // Se RAM for muito baixa (ex: menor de 256MB), simular OOMKilled
-    if (ramLimit <= 256) {
-      setWorkloadStatus('running');
-      let prog = 0;
-      const interval = setInterval(() => {
-        prog += 20;
-        setWorkloadProgress(prog);
-        if (prog >= 60) {
-          clearInterval(interval);
-          setWorkloadStatus('oom');
-        }
-      }, 300);
-    } else {
-      setWorkloadStatus('running');
-      let prog = 0;
-      // Quanto maior a CPU limit configurada, mais rápido o processamento
-      const speed = Math.max(100, 400 - (cpuLimit * 80));
-      const interval = setInterval(() => {
-        prog += 10;
-        setWorkloadProgress(prog);
-        if (prog >= 100) {
-          clearInterval(interval);
-          setWorkloadStatus('success');
-        }
-      }, speed);
-    }
-  };
-
-  // Interpretador de Comandos do Playground
-  const handleTerminalSubmit = (e) => {
-    e.preventDefault();
-    const cmd = terminalInput.trim();
-    if (!cmd) return;
-
-    // Adiciona comando ao histórico
-    const promptPrefix = isUbuntuShell ? 'root@ubuntu-container:/# ' : 'docker@learning-host:~$ ';
-    setTerminalHistory(prev => [...prev, { type: 'input', text: promptPrefix + cmd }]);
-    setTerminalInput('');
-
-    if (isUbuntuShell) {
-      handleUbuntuCommand(cmd);
-      return;
-    }
-
-    handleHostCommand(cmd);
-  };
-
-  // Comandos rodados no terminal hospedeiro do Docker
-  const handleHostCommand = (cmd) => {
-    const parts = cmd.split(/\s+/);
-    const base = parts[0];
-
-    if (base === 'clear') {
-      setTerminalHistory([]);
-      return;
-    }
-
-    if (base === 'help') {
-      setTerminalHistory(prev => [
-        ...prev,
-        { type: 'output', text: 'Comandos disponíveis no simulador:' },
-        { type: 'output', text: '  docker login                    - Simula autenticação no Docker Hub' },
-        { type: 'output', text: '  docker pull <imagem>            - Simula download de uma imagem (ex: nginx, alpine)' },
-        { type: 'output', text: '  docker build -t <tag> .         - Simula compilação do Dockerfile local' },
-        { type: 'output', text: '  docker images                   - Lista imagens baixadas ou construídas' },
-        { type: 'output', text: '  docker run -d -p <p1:p2> <img > - Roda imagem em segundo plano (ex: docker run -d -p 8080:80 nginx)' },
-        { type: 'output', text: '  docker run -it ubuntu bash      - Entra na sub-shell interativa do Ubuntu' },
-        { type: 'output', text: '  docker ps                       - Lista containers ativos' },
-        { type: 'output', text: '  docker ps -a                    - Lista todos os containers (ativos e parados)' },
-        { type: 'output', text: '  docker stop <nome_do_container> - Para um container em execução' },
-        { type: 'output', text: '  docker rm <nome_do_container>   - Remove um container parado' },
-        { type: 'output', text: '  clear                           - Limpa a tela' }
-      ]);
-      return;
-    }
-
-    if (base === 'docker') {
-      const sub = parts[1];
-      if (!sub) {
-        setTerminalHistory(prev => [...prev, { type: 'error', text: 'Comando inválido. Digite "docker --help" ou "help".' }]);
-        return;
-      }
-
-      if (sub === 'login') {
-        runProgressSimulation('Autenticando no Docker Hub...', 4, () => {
-          setTerminalHistory(prev => [
-            ...prev,
-            { type: 'output', text: 'WARNING! Your password will be stored unencrypted in /root/.docker/config.json.' },
-            { type: 'output', text: 'Login Succeeded' }
-          ]);
-        });
-        return;
-      }
-
-      if (sub === 'pull') {
-        const imgName = parts[2] || 'nginx';
-        runProgressSimulation(`Buscando e puxando biblioteca/${imgName} do Docker Hub...`, 6, () => {
-          const newImg = {
-            id: Math.random().toString(16).substring(2, 14),
-            name: imgName,
-            tag: 'latest',
-            size: '48.2MB'
-          };
-          setVirtualImages(prev => {
-            if (prev.some(i => i.name === imgName)) return prev;
-            return [...prev, newImg];
-          });
-          setTerminalHistory(prev => [
-            ...prev,
-            { type: 'output', text: `Using default tag: latest` },
-            { type: 'output', text: `latest: Pulling from library/${imgName}` },
-            { type: 'output', text: `Digest: sha256:d892d110199e4b6c8aa5582fbc788cc9a5b3a...` },
-            { type: 'output', text: `Status: Downloaded newer image for ${imgName}:latest` }
-          ]);
-        });
-        return;
-      }
-
-      if (sub === 'build') {
-        // docker build -t test-app .
-        const flagIndex = parts.indexOf('-t');
-        const tag = flagIndex !== -1 && parts[flagIndex + 1] ? parts[flagIndex + 1] : 'my-app:latest';
-        runProgressSimulation('Compilando Dockerfile (Multi-stage build)...', 8, () => {
-          const newImg = {
-            id: '4fd910c2830f',
-            name: tag.split(':')[0],
-            tag: tag.split(':')[1] || 'latest',
-            size: '42.1MB'
-          };
-          setVirtualImages(prev => [...prev, newImg]);
-          setTerminalHistory(prev => [
-            ...prev,
-            { type: 'output', text: 'Step 1/5 : FROM node:18-alpine AS build' },
-            { type: 'output', text: ' ---> 8c76ad87ab91' },
-            { type: 'output', text: 'Step 2/5 : WORKDIR /app' },
-            { type: 'output', text: ' ---> Running in 7289547d2a5d' },
-            { type: 'output', text: 'Step 3/5 : COPY package*.json ./' },
-            { type: 'output', text: 'Step 4/5 : RUN npm ci && COPY . . && npm run build' },
-            { type: 'output', text: ' ---> Running in e38d21b38f83' },
-            { type: 'output', text: 'Step 5/5 : FROM nginx:alpine' },
-            { type: 'output', text: ' ---> COPY --from=build /app/dist /usr/share/nginx/html' },
-            { type: 'output', text: `Successfully built 4fd910c2830f` },
-            { type: 'output', text: `Successfully tagged ${tag}` }
-          ]);
-        });
-        return;
-      }
-
-      if (sub === 'images') {
-        setTerminalHistory(prev => {
-          const lines = [
-            { type: 'output', text: 'REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE' }
-          ];
-          virtualImages.forEach(img => {
-            lines.push({
-              type: 'output',
-              text: `${img.name.padEnd(20)}${img.tag.padEnd(20)}${img.id.padEnd(20)}Just now            ${img.size}`
-            });
-          });
-          return [...prev, ...lines];
-        });
-        return;
-      }
-
-      if (sub === 'run') {
-        const isDetached = parts.includes('-d');
-        const isInteractive = parts.includes('-it');
-        
-        // docker run -d -p 8080:80 nginx
-        // docker run -it ubuntu bash
-        const imgName = parts[parts.length - 2] === 'ubuntu' || parts[parts.length - 1] === 'ubuntu' ? 'ubuntu' : parts[parts.length - 1];
-
-        // Se for ubuntu interativo
-        if (isInteractive && imgName === 'ubuntu') {
-          runProgressSimulation('Baixando imagem base do Ubuntu...', 5, () => {
-            setIsUbuntuShell(true);
-            setIsUbuntuCurlInstalled(false);
-            setTerminalHistory(prev => [
-              ...prev,
-              { type: 'output', text: 'root@ubuntu-container:/# ' },
-              { type: 'system', text: 'Você entrou no container do Ubuntu. Sinta-se em uma máquina virtual leve.' },
-              { type: 'system', text: 'Comandos disponíveis: ls, pwd, whoami, apt update, apt install curl, curl <url>, exit' }
-            ]);
-          });
-          return;
-        }
-
-        if (isDetached) {
-          const portFlagIndex = parts.indexOf('-p');
-          const portsMapping = portFlagIndex !== -1 && parts[portFlagIndex + 1] ? parts[portFlagIndex + 1] : '80:80';
-          const nameFlagIndex = parts.indexOf('--name');
-          const customName = nameFlagIndex !== -1 && parts[nameFlagIndex + 1] ? parts[nameFlagIndex + 1] : `container-${Math.floor(Math.random() * 1000)}`;
-
-          // Verifica se a imagem existe localmente
-          const hasImage = virtualImages.some(i => i.name === imgName);
-          if (!hasImage) {
-            setTerminalHistory(prev => [
-              ...prev,
-              { type: 'output', text: `Unable to find image '${imgName}:latest' locally` },
-              { type: 'output', text: `Pulling from library/${imgName}...` }
-            ]);
-          }
-
-          runProgressSimulation(`Instanciando container '${customName}'...`, 4, () => {
-            const containerId = Math.random().toString(16).substring(2, 14);
-            const newContainer = {
-              id: containerId,
-              name: customName,
-              image: imgName,
-              ports: portsMapping,
-              status: 'Up Just now'
-            };
-            setVirtualContainers(prev => [...prev, newContainer]);
-            setTerminalHistory(prev => [
-              ...prev,
-              { type: 'output', text: containerId }
-            ]);
-          });
-          return;
-        }
-
-        setTerminalHistory(prev => [...prev, { type: 'error', text: 'Suporte limitado neste simulador. Tente com "-d" (ex: docker run -d -p 8080:80 nginx) ou "-it ubuntu bash".' }]);
-        return;
-      }
-
-      if (sub === 'ps') {
-        const showAll = parts.includes('-a');
-        setTerminalHistory(prev => {
-          const lines = [
-            { type: 'output', text: 'CONTAINER ID        IMAGE               COMMAND             STATUS              PORTS               NAMES' }
-          ];
-          const list = showAll ? virtualContainers : virtualContainers.filter(c => c.status.startsWith('Up'));
-          list.forEach(c => {
-            lines.push({
-              type: 'output',
-              text: `${c.id.padEnd(20)}${c.image.padEnd(20)}"/entrypoint.sh"     ${c.status.padEnd(20)}${c.ports.padEnd(20)}${c.name}`
-            });
-          });
-          return [...prev, ...lines];
-        });
-        return;
-      }
-
-      if (sub === 'stop') {
-        const name = parts[2];
-        if (!name) {
-          setTerminalHistory(prev => [...prev, { type: 'error', text: 'Erro: especifique o nome ou ID do container.' }]);
-          return;
-        }
-        setVirtualContainers(prev =>
-          prev.map(c => (c.name === name || c.id === name ? { ...c, status: 'Exited (0) Just now' } : c))
-        );
-        setTerminalHistory(prev => [...prev, { type: 'output', text: name }]);
-        return;
-      }
-
-      if (sub === 'rm') {
-        const name = parts[2];
-        if (!name) {
-          setTerminalHistory(prev => [...prev, { type: 'error', text: 'Erro: especifique o nome ou ID do container.' }]);
-          return;
-        }
-        setVirtualContainers(prev => {
-          const container = prev.find(c => c.name === name || c.id === name);
-          if (container && container.status.startsWith('Up')) {
-            setTerminalHistory(t => [...t, { type: 'error', text: `Error response from daemon: You cannot remove a running container ${name}. Stop the container first.` }]);
-            return prev;
-          }
-          return prev.filter(c => c.name !== name && c.id !== name);
-        });
-        return;
-      }
-
-      setTerminalHistory(prev => [...prev, { type: 'error', text: `Subcomando docker "${sub}" não implementado no playground.` }]);
-      return;
-    }
-
-    setTerminalHistory(prev => [...prev, { type: 'error', text: `Comando desconhecido: "${base}". Digite "help" para ver a lista de comandos simulados.` }]);
-  };
-
-  // Comandos rodados dentro da sub-shell interativa do Ubuntu
-  const handleUbuntuCommand = (cmd) => {
-    const parts = cmd.split(/\s+/);
-    const base = parts[0];
-
-    if (base === 'exit') {
-      setIsUbuntuShell(false);
-      setTerminalHistory(prev => [...prev, { type: 'system', text: 'Saiu do container do Ubuntu. Retornou ao host local.' }]);
-      return;
-    }
-
-    if (base === 'ls') {
-      setTerminalHistory(prev => [...prev, { type: 'output', text: 'bin   dev   etc   home  lib   media mnt   opt   proc  root  run   sbin  srv   sys   tmp   usr   var' }]);
-      return;
-    }
-
-    if (base === 'pwd') {
-      setTerminalHistory(prev => [...prev, { type: 'output', text: '/' }]);
-      return;
-    }
-
-    if (base === 'whoami') {
-      setTerminalHistory(prev => [...prev, { type: 'output', text: 'root' }]);
-      return;
-    }
-
-    if (base === 'apt') {
-      const sub = parts[1];
-      if (sub === 'update') {
-        runProgressSimulation('Lendo listas de pacotes... Concluído', 5, () => {
-          setTerminalHistory(prev => [
-            ...prev,
-            { type: 'output', text: 'Get:1 http://archive.ubuntu.com/ubuntu focal InRelease [265 kB]' },
-            { type: 'output', text: 'Get:2 http://archive.ubuntu.com/ubuntu focal-updates InRelease [114 kB]' },
-            { type: 'output', text: 'Fetched 379 kB in 2s (180 kB/s)' },
-            { type: 'output', text: 'Reading package lists... Done' },
-            { type: 'output', text: 'Building dependency tree... Done' }
-          ]);
-        });
-        return;
-      }
-
-      if (sub === 'install') {
-        const pkg = parts[2];
-        if (pkg === 'curl') {
-          runProgressSimulation('Lendo dependências e descompactando curl...', 6, () => {
-            setIsUbuntuCurlInstalled(true);
-            setTerminalHistory(prev => [
-              ...prev,
-              { type: 'output', text: 'The following NEW packages will be installed:' },
-              { type: 'output', text: '  curl libcurl4' },
-              { type: 'output', text: '0 upgraded, 2 newly installed, 0 to remove.' },
-              { type: 'output', text: 'Unpacking curl (7.68.0-1ubuntu2)...' },
-              { type: 'output', text: 'Setting up curl (7.68.0-1ubuntu2)...' },
-              { type: 'output', text: 'Processing triggers for libc-bin... Done' }
-            ]);
-          });
-          return;
-        }
-        setTerminalHistory(prev => [...prev, { type: 'error', text: 'Pacote indisponível no repositório simulado do Ubuntu. Tente "apt install curl".' }]);
-        return;
-      }
-    }
-
-    if (base === 'curl') {
-      if (!isUbuntuCurlInstalled) {
-        setTerminalHistory(prev => [...prev, { type: 'error', text: 'bash: curl: command not found' }]);
-        return;
-      }
-      const target = parts[1] || 'google.com';
-      setTerminalHistory(prev => [
-        ...prev,
-        { type: 'output', text: `*   Trying ${target}...` },
-        { type: 'output', text: `* Connected to ${target} (142.250.191.110) port 80 (#0)` },
-        { type: 'output', text: `> GET / HTTP/1.1\n> Host: ${target}\n> User-Agent: curl/7.68.0` },
-        { type: 'output', text: `< HTTP/1.1 301 Moved Permanently\n< Location: http://www.${target}/\n< Content-Type: text/html; charset=UTF-8` },
-        { type: 'output', text: `<HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">\n<TITLE>301 Moved</TITLE></HEAD>\n<BODY>\n<H1>301 Moved</H1>\nThe document has moved\n<A HREF="http://www.${target}/">here</A>.\n</BODY></HTML>` }
-      ]);
-      return;
-    }
-
-    setTerminalHistory(prev => [...prev, { type: 'error', text: `bash: ${base}: comando não implementado na sub-shell simulada.` }]);
-  };
-
-  // Simulação genérica de progresso/carregamento no terminal
-  const runProgressSimulation = (text, seconds, callback) => {
-    setIsTerminalLoading(true);
-    setTerminalLoadingText(text);
-    setTerminalLoadingProgress(0);
-    
-    let prog = 0;
-    const step = 100 / (seconds * 2);
-    const interval = setInterval(() => {
-      prog += step;
-      setTerminalLoadingProgress(Math.min(100, Math.round(prog)));
-      if (prog >= 100) {
-        clearInterval(interval);
-        setIsTerminalLoading(false);
-        callback();
-      }
-    }, 500);
-  };
 
   return (
     <div className="dockerlab-container">
@@ -649,13 +232,6 @@ export default function App() {
             id="tab-o-que-e"
           >
             <span>📖</span> O que é Docker?
-          </button>
-          <button 
-            className={`nav-item ${activeTab === 'sob-o-capo' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sob-o-capo')}
-            id="tab-sob-o-capo"
-          >
-            <span>🏗️</span> Sob o Capô
           </button>
           <button 
             className={`nav-item ${activeTab === 'ciclo-de-vida' ? 'active' : ''}`}
@@ -698,13 +274,6 @@ export default function App() {
             id="tab-flags"
           >
             <span>🚩</span> Flags
-          </button>
-          <button 
-            className={`nav-item ${activeTab === 'playground' ? 'active' : ''}`}
-            onClick={() => setActiveTab('playground')}
-            id="tab-playground"
-          >
-            <span>💻</span> Terminal Playground
           </button>
         </nav>
 
@@ -780,222 +349,210 @@ export default function App() {
         )}
 
         {/* TAB 2: Sob o Capô (Simuladores de Namespaces & cgroups) */}
-        {activeTab === 'sob-o-capo' && (
-          <section className="tab-section fade-in">
-            <h1>Como funciona sob o capô?</h1>
-            <p className="subtitle">Interaja com os dois pilares fundamentais do kernel Linux que dão vida aos containers Docker.</p>
-
-            <div className="simulators-grid">
-              
-              {/* Simulador de Namespaces */}
-              <div className="premium-card">
-                <h2>1. Namespaces (Isolamento Visual)</h2>
-                <p className="card-desc">O isolamento faz o container acreditar que ele é o único sistema operacional rodando na máquina hospedeira.</p>
-                
-                <div className="sim-controls">
-                  <label className="toggle-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={namespacePid}
-                      onChange={(e) => setNamespacePid(e.target.checked)}
-                    />
-                    <span className="slider-round"></span>
-                    Ativar Isolamento de Processos (PID Namespace)
-                  </label>
-
-                  <label className="toggle-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={namespaceNet}
-                      onChange={(e) => setNamespaceNet(e.target.checked)}
-                    />
-                    <span className="slider-round"></span>
-                    Ativar Isolamento de Rede (NET Namespace)
-                  </label>
-                </div>
-
-                <div className="visualizer-box">
-                  <h4>Visualização do Container:</h4>
-                  {namespacePid ? (
-                    <div className="code-output pid-isolated">
-                      <p className="system-line">[PID Namespace ATIVO - Visualização restrita]</p>
-                      <p>PID 1  {"→"} node server.js (Aplicação Principal)</p>
-                      <p>PID 12 {"→"} python check_status.py</p>
-                    </div>
-                  ) : (
-                    <div className="code-output pid-leaked">
-                      <p className="system-line error">[PID Namespace INATIVO - Vazamento do Host!]</p>
-                      <p>PID 1  {"→"} /sbin/init (Host)</p>
-                      <p>PID 12 {"→"} /usr/lib/systemd/systemd</p>
-                      <p>PID 541 {"→"} chrome --type=renderer</p>
-                      <p>PID 873 {"→"} docker-daemon</p>
-                      <p>PID 912 {"→"} node server.js (O container enxerga tudo!)</p>
-                    </div>
-                  )}
-
-                  <h4 style={{ marginTop: '15px' }}>Rede e IP Virtual:</h4>
-                  {namespaceNet ? (
-                    <div className="code-output net-isolated">
-                      <p className="system-line">[NET Namespace ATIVO]</p>
-                      <p>Interface: eth0  |  IP: 172.17.0.2</p>
-                      <p>Portas em uso: 80 (Binds locais funcionam isoladamente)</p>
-                    </div>
-                  ) : (
-                    <div className="code-output net-leaked">
-                      <p className="system-line error">[NET Namespace INATIVO - Conflito de Rede!]</p>
-                      <p>Interface: localhost  |  IP: 127.0.0.1</p>
-                      <p className="error">Conflito de Porta: Porta 80 já está em uso pelo Host ou outro container!</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Simulador de cgroups */}
-              <div className="premium-card">
-                <h2>2. Control Groups / cgroups (Limite de Hardware)</h2>
-                <p className="card-desc">O cgroup limita a quantidade máxima de CPU, Memória RAM e I/O que o container tem autorização para extrair da máquina física.</p>
-                
-                <div className="sim-controls">
-                  <div className="slider-group">
-                    <label>Limite de CPU: <strong>{cpuLimit} Cores</strong></label>
-                    <input 
-                      type="range" 
-                      min="0.5" 
-                      max="4" 
-                      step="0.5" 
-                      value={cpuLimit} 
-                      onChange={(e) => setCpuLimit(parseFloat(e.target.value))}
-                      disabled={workloadStatus === 'running'}
-                    />
-                  </div>
-
-                  <div className="slider-group">
-                    <label>Limite de Memória RAM: <strong>{ramLimit} MB</strong></label>
-                    <input 
-                      type="range" 
-                      min="128" 
-                      max="2048" 
-                      step="128" 
-                      value={ramLimit} 
-                      onChange={(e) => setRamLimit(parseInt(e.target.value))}
-                      disabled={workloadStatus === 'running'}
-                    />
-                  </div>
-
-                  <button 
-                    className="primary-button" 
-                    onClick={startCgroupsSimulation}
-                    disabled={workloadStatus === 'running'}
-                  >
-                    Simular Carga de Trabalho
-                  </button>
-                </div>
-
-                <div className="visualizer-box">
-                  <h4>Status da Simulação:</h4>
-                  
-                  {workloadStatus === 'idle' && (
-                    <p className="status-text text-muted">Pronto para iniciar simulação de carga pesada.</p>
-                  )}
-
-                  {workloadStatus === 'running' && (
-                    <div className="progress-container">
-                      <p className="status-text text-info">Processando carga com {cpuLimit} cores de CPU...</p>
-                      <div className="progress-bar-bg">
-                        <div className="progress-bar-fill" style={{ width: `${workloadProgress}%` }}></div>
-                      </div>
-                      <span className="progress-percentage">{workloadProgress}%</span>
-                    </div>
-                  )}
-
-                  {workloadStatus === 'success' && (
-                    <p className="status-text text-success">
-                      🎉 <strong>Sucesso!</strong> A carga foi completada com segurança. Os limites de cgroups impediram a queda da máquina física.
-                    </p>
-                  )}
-
-                  {workloadStatus === 'oom' && (
-                    <div className="oom-alert">
-                      <p className="status-text text-error">
-                        💥 <strong>OOMKilled! (Out of Memory)</strong>
-                      </p>
-                      <p>O container tentou consumir mais memória do que o limite definido de {ramLimit}MB. O cgroup interrompeu e encerrou o container para salvar a máquina hospedeira de travar completamente.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          </section>
-        )}
-
         {/* TAB 3: Ciclo de Vida */}
         {activeTab === 'ciclo-de-vida' && (
           <section className="tab-section fade-in">
             <h1>O Ciclo de Vida do Docker</h1>
-            <p className="subtitle">Entenda o fluxo completo desde o código do desenvolvedor até o container rodando no servidor de produção.</p>
+            <p className="subtitle">Aprenda a sequência de transformação: do arquivo de receita escrito até o container rodando isolado na nuvem.</p>
 
-            <div className="lifecycle-visualizer">
+            {/* Pipeline de Passos Interativos */}
+            <div className="lifecycle-pipeline">
+              <button 
+                className={`pipeline-node ${activeLifecycleStep === 1 ? 'active' : ''}`}
+                onClick={() => setActiveLifecycleStep(1)}
+              >
+                <div className="node-number">1</div>
+                <div className="node-label">Dockerfile</div>
+                <div className="node-action">Receita</div>
+              </button>
               
-              <div className="lifecycle-step">
-                <div className="step-num">1</div>
-                <h3>Dockerfile</h3>
-                <span className="step-desc">O projeto arquitetônico</span>
-                <div className="step-code">
-                  <pre>
-                    FROM node:18-alpine<br/>
-                    WORKDIR /app<br/>
-                    COPY . .<br/>
-                    CMD ["node", "app.js"]
-                  </pre>
-                </div>
-                <p>Arquivo de texto plano que detalha a receita passo a passo de como estruturar sua aplicação.</p>
+              <div className="pipeline-connector">
+                <span className="connector-cmd">docker build</span>
+                <div className="connector-line"></div>
               </div>
 
-              <div className="lifecycle-arrow">➡️</div>
+              <button 
+                className={`pipeline-node ${activeLifecycleStep === 2 ? 'active' : ''}`}
+                onClick={() => setActiveLifecycleStep(2)}
+              >
+                <div className="node-number">2</div>
+                <div className="node-label">Imagem</div>
+                <div className="node-action">Pacote</div>
+              </button>
 
-              <div className="lifecycle-step">
-                <div className="step-num">2</div>
-                <h3>Imagem</h3>
-                <span className="step-desc">O bolo congelado</span>
-                <div className="step-code static">
-                  <pre>
-                    [Camada 4] CMD: node app.js<br/>
-                    [Camada 3] COPY: arquivos de código<br/>
-                    [Camada 2] WORKDIR: /app<br/>
-                    [Camada 1] Node.js Alpine base
-                  </pre>
-                </div>
-                <p>O arquivo binário gerado a partir do comando `docker build`. É somente leitura e composto de camadas.</p>
+              <div className="pipeline-connector">
+                <span className="connector-cmd">docker push</span>
+                <div className="connector-line"></div>
               </div>
 
-              <div className="lifecycle-arrow">➡️</div>
+              <button 
+                className={`pipeline-node ${activeLifecycleStep === 3 ? 'active' : ''}`}
+                onClick={() => setActiveLifecycleStep(3)}
+              >
+                <div className="node-number">3</div>
+                <div className="node-label">Registro</div>
+                <div className="node-action">Nuvem</div>
+              </button>
 
-              <div className="lifecycle-step">
-                <div className="step-num">3</div>
-                <h3>Registro</h3>
-                <span className="step-desc">O supermercado</span>
-                <div className="registry-hub">
-                  <div className="hub-box">Docker Hub</div>
-                  <span className="pull-push-text">docker push / pull</span>
-                </div>
-                <p>Servidor remoto que armazena e distribui imagens oficiais e customizadas em segurança.</p>
+              <div className="pipeline-connector">
+                <span className="connector-cmd">docker run</span>
+                <div className="connector-line"></div>
               </div>
 
-              <div className="lifecycle-arrow">➡️</div>
+              <button 
+                className={`pipeline-node ${activeLifecycleStep === 4 ? 'active' : ''}`}
+                onClick={() => setActiveLifecycleStep(4)}
+              >
+                <div className="node-number">4</div>
+                <div className="node-label">Container</div>
+                <div className="node-action">Execução</div>
+              </button>
+            </div>
 
-              <div className="lifecycle-step">
-                <div className="step-num">4</div>
-                <h3>Container</h3>
-                <span className="step-desc">O bolo pronto</span>
-                <div className="container-status active-run">
-                  <div className="pulse-dot"></div>
-                  <span>Container Ativo</span>
-                  <p>IP: 172.17.0.2<br/>Porta: 8080</p>
+            {/* Painel de Explicação do Passo Selecionado */}
+            <div className="premium-card lifecycle-detail-card fade-in">
+              {activeLifecycleStep === 1 && (
+                <div>
+                  <div className="detail-header-row">
+                    <span className="step-badge">Passo 1</span>
+                    <h2>📄 Dockerfile: A Receita Escrita</h2>
+                  </div>
+                  <p className="step-intro-text">
+                    O <strong>Dockerfile</strong> é um arquivo de texto plano que lista todas as instruções ordenadas para construir a imagem de sua aplicação. É o projeto arquitetônico do seu container.
+                  </p>
+                  
+                  <div className="lifecycle-grid-details">
+                    <div className="code-column-wrapper">
+                      <strong>Exemplo prático de Dockerfile:</strong>
+                      <pre className="code-pre-box">{`FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN npm ci
+CMD ["node", "app.js"]`}</pre>
+                    </div>
+                    <div className="explanation-column-wrapper">
+                      <h4>💡 Conceitos Chave:</h4>
+                      <ul>
+                        <li><strong>FROM:</strong> Inicia o blueprint definindo a imagem base de sistema operacional.</li>
+                        <li><strong>WORKDIR:</strong> Cria e acessa a pasta de trabalho interna.</li>
+                        <li><strong>COPY:</strong> Move arquivos do seu computador para dentro do container.</li>
+                        <li><strong>CMD:</strong> O script/comando rodado ao instanciar o container.</li>
+                      </ul>
+                      <div className="alert-box note" style={{ marginTop: '16px' }}>
+                        <p><strong>Comando de Build:</strong> Para transformar essa receita em imagem, rodamos: <code>docker build -t app:1.0 .</code></p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p>Instância viva, isolada e em execução de uma Imagem. Gerada usando `docker run`.</p>
-              </div>
+              )}
 
+              {activeLifecycleStep === 2 && (
+                <div>
+                  <div className="detail-header-row">
+                    <span className="step-badge">Passo 2</span>
+                    <h2>📦 Imagem: O Pacote Estático (Read-Only)</h2>
+                  </div>
+                  <p className="step-intro-text">
+                    A <strong>Imagem</strong> é o arquivo binário estático empacotado após o build. Ela não roda código diretamente, mas armazena todas as camadas somente leitura necessárias para a execução.
+                  </p>
+
+                  <div className="lifecycle-grid-details">
+                    <div className="layers-visualizer">
+                      <strong>Estrutura de Camadas (ReadOnly Layers):</strong>
+                      <div className="layer-block">
+                        <span className="layer-tag">Camada 5</span> CMD ["node", "app.js"] (1 Byte)
+                      </div>
+                      <div className="layer-block">
+                        <span className="layer-tag">Camada 4</span> COPY . . (42.5 MB)
+                      </div>
+                      <div className="layer-block">
+                        <span className="layer-tag">Camada 3</span> RUN npm ci (85.1 MB)
+                      </div>
+                      <div className="layer-block">
+                        <span className="layer-tag">Camada 2</span> WORKDIR /app (0 Bytes)
+                      </div>
+                      <div className="layer-block base">
+                        <span className="layer-tag">Camada 1</span> Node.js Base OS (174 MB)
+                      </div>
+                    </div>
+                    <div className="explanation-column-wrapper">
+                      <h4>💡 Conceitos Chave:</h4>
+                      <ul>
+                        <li><strong>Imutabilidade:</strong> Uma imagem nunca muda. Para atualizar a aplicação, gera-se uma nova tag de imagem.</li>
+                        <li><strong>Armazenamento em Cache:</strong> Se uma camada não sofrer alterações, o Docker reutiliza o cache nas próximas compilações.</li>
+                        <li><strong>Tamanho Otimizado:</strong> O uso de sistemas base como Alpine Linux mantém o peso final em megabytes, ao contrário de gigabytes de VMs.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeLifecycleStep === 3 && (
+                <div>
+                  <div className="detail-header-row">
+                    <span className="step-badge">Passo 3</span>
+                    <h2>☁️ Registro: O Compartilhamento (Docker Hub)</h2>
+                  </div>
+                  <p className="step-intro-text">
+                    O <strong>Registro</strong> é o serviço de nuvem encarregado de armazenar, catalogar e distribuir as imagens compiladas de forma que qualquer computador autorizado possa baixá-las.
+                  </p>
+
+                  <div className="lifecycle-grid-details">
+                    <div className="visual-diagram-box">
+                      <div className="diagram-node local">Seu PC (Imagem)</div>
+                      <div className="diagram-link">
+                        <span>docker push</span>
+                        <span className="arrow-line">────────────────&gt;</span>
+                      </div>
+                      <div className="diagram-node cloud">Docker Hub</div>
+                      <div className="diagram-link">
+                        <span>docker pull</span>
+                        <span className="arrow-line">────────────────&gt;</span>
+                      </div>
+                      <div className="diagram-node prod">Servidor VPS</div>
+                    </div>
+                    <div className="explanation-column-wrapper">
+                      <h4>💡 Conceitos Chave:</h4>
+                      <ul>
+                        <li><strong>docker login:</strong> Autentica seu terminal de desenvolvimento com sua conta oficial no Docker Hub.</li>
+                        <li><strong>docker push:</strong> Faz o upload da sua imagem local para o registro remoto.</li>
+                        <li><strong>docker pull:</strong> Faz o download de uma imagem do registro para executar na máquina local ou em nuvem.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeLifecycleStep === 4 && (
+                <div>
+                  <div className="detail-header-row">
+                    <span className="step-badge">Passo 4</span>
+                    <h2>⚡ Container: A Instância Executável (Read-Write)</h2>
+                  </div>
+                  <p className="step-intro-text">
+                    O <strong>Container</strong> é a instância em execução da imagem. Ele cria uma camada temporária de escrita (Read-Write Layer) no topo das camadas estáticas da imagem e roda isolado no Host.
+                  </p>
+
+                  <div className="lifecycle-grid-details">
+                    <div className="container-status-box">
+                      <div className="container-status-header">
+                        <span className="pulse-dot-active"></span>
+                        <strong>STATUS: RUNNING</strong>
+                      </div>
+                      <div className="status-item"><span>Container ID:</span> <code>e842bd98a1c0</code></div>
+                      <div className="status-item"><span>IP Local:</span> <code>172.17.0.2</code></div>
+                      <div className="status-item"><span>Mapeamento:</span> <code>Porta 8080 ──&gt; 3000</code></div>
+                    </div>
+                    <div className="explanation-column-wrapper">
+                      <h4>💡 Conceitos Chave:</h4>
+                      <ul>
+                        <li><strong>Camada R/W (Writable Layer):</strong> Toda alteração feita no container ativo (gravação de banco, logs) ocorre nessa camada e desaparece se o container for deletado.</li>
+                        <li><strong>Isolamento Total:</strong> Possui redes virtuais, IDs de processos e discos totalmente apartados do sistema operacional hospedeiro.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -1109,6 +666,29 @@ export default function App() {
                 <div className="code-example-box">
                   <code>docker build -t seu-usuario/minha-app:1.0.0 .</code>
                 </div>
+
+                <div className="mock-terminal-console">
+                  <div className="console-header">
+                    <span className="terminal-dot red"></span>
+                    <span className="terminal-dot yellow"></span>
+                    <span className="terminal-dot green"></span>
+                    <span className="console-title">terminal - docker build</span>
+                  </div>
+                  <div className="console-body">
+                    <p className="cmd-line">$ docker build -t seu-usuario/minha-app:1.0.0 .</p>
+                    <p>[+] Building 2.4s (6/6) FINISHED</p>
+                    <p>=&gt; [internal] load build definition from Dockerfile  0.1s</p>
+                    <p>=&gt; [internal] load .dockerignore  0.0s</p>
+                    <p>=&gt; [internal] load metadata for docker.io/library/node:18-alpine  0.8s</p>
+                    <p>=&gt; [1/3] FROM docker.io/library/node:18-alpine@sha256:1a87b...  0.0s</p>
+                    <p>=&gt; [2/3] WORKDIR /usr/src/app  0.1s</p>
+                    <p>=&gt; [3/3] COPY package*.json ./  0.0s</p>
+                    <p>=&gt; exporting to image  0.3s</p>
+                    <p>=&gt; =&gt; naming to docker.io/seu-usuario/minha-app:1.0.0  0.0s</p>
+                    <p className="success-line">✔ Successfully tagged seu-usuario/minha-app:1.0.0</p>
+                  </div>
+                </div>
+
                 <div className="alert-box note" style={{ marginTop: '20px' }}>
                   <h4>🔍 O que significa esse comando?</h4>
                   <p style={{ marginTop: '8px' }}>
@@ -1140,6 +720,24 @@ export default function App() {
                 <h4 style={{ marginTop: '20px', marginBottom: '8px' }}>2. Faça o upload da imagem:</h4>
                 <div className="code-example-box">
                   <code>docker push seu-usuario/minha-app:1.0.0</code>
+                </div>
+
+                <div className="mock-terminal-console">
+                  <div className="console-header">
+                    <span className="terminal-dot red"></span>
+                    <span className="terminal-dot yellow"></span>
+                    <span className="terminal-dot green"></span>
+                    <span className="console-title">terminal - docker push</span>
+                  </div>
+                  <div className="console-body">
+                    <p className="cmd-line">$ docker push seu-usuario/minha-app:1.0.0</p>
+                    <p>The push refers to repository [docker.io/seu-usuario/minha-app]</p>
+                    <p>f72b83a21bc3: Pushed  2.4MB</p>
+                    <p>a4c1f9d8c83e: Layer already exists</p>
+                    <p>8cf771d9d95f: Layer already exists</p>
+                    <p>1.0.0: digest: sha256:4d87e2b8c9d0a... size: 952</p>
+                    <p className="success-line">✔ Upload completo! Imagem disponível publicamente no Docker Hub.</p>
+                  </div>
                 </div>
                 
                 <div className="alert-box warning" style={{ marginTop: '20px' }}>
@@ -1174,6 +772,22 @@ services:
                 <div className="code-example-box">
                   <code>docker compose up -d</code>
                 </div>
+
+                <div className="mock-terminal-console">
+                  <div className="console-header">
+                    <span className="terminal-dot red"></span>
+                    <span className="terminal-dot yellow"></span>
+                    <span className="terminal-dot green"></span>
+                    <span className="console-title">terminal - docker compose up</span>
+                  </div>
+                  <div className="console-body">
+                    <p className="cmd-line">$ docker compose up -d</p>
+                    <p>[+] Running 2/2</p>
+                    <p> 🟢 Network app_default      Created  0.1s</p>
+                    <p> 🟢 Container meu-servico-web Started  0.4s</p>
+                    <p className="success-line">✔ Aplicação inicializada com sucesso em segundo plano!</p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1185,17 +799,35 @@ services:
                   Levar a sua aplicação para rodar em produção (ex: nuvens como AWS EC2, Google Cloud, DigitalOcean) é extremamente simples com o Docker. Você <strong>não</strong> precisa copiar seus códigos fontes para a máquina.
                 </p>
 
-                <div className="visualizer-box" style={{ marginTop: '20px', border: '1px solid var(--color-primary)' }}>
-                  <p className="system-line">[ Roteiro do Deploy Real ]</p>
-                  <p>1. Acesse o servidor remoto de produção (via SSH).</p>
-                  <p>2. Certifique-se de que o <strong>Docker</strong> e o <strong>Docker Compose</strong> estão instalados nele.</p>
-                  <p>3. Transfira <strong>apenas</strong> o seu arquivo <code>docker-compose.yml</code> para o servidor:</p>
-                  <p style={{ color: 'var(--color-primary)', paddingLeft: '12px' }}>
+                <div className="mock-terminal-console">
+                  <div className="console-header">
+                    <span className="terminal-dot red"></span>
+                    <span className="terminal-dot yellow"></span>
+                    <span className="terminal-dot green"></span>
+                    <span className="console-title">terminal - ssh vps-production</span>
+                  </div>
+                  <div className="console-body">
+                    <p className="cmd-line">$ ssh usuario@ip-do-servidor</p>
+                    <p>Welcome to Ubuntu VPS (GNU/Linux 5.15.0 x86_64)</p>
+                    <p className="cmd-line">usuario@vps:~$ cd app/</p>
+                    <p className="cmd-line">usuario@vps:~/app$ docker compose up -d</p>
+                    <p>Pulling web ... done</p>
+                    <p>Recreating meu-servico-web ... done</p>
+                    <p className="success-line">✔ Deploy remoto concluído! Acesse: http://ip-do-servidor:8080</p>
+                  </div>
+                </div>
+
+                <div className="alert-box note" style={{ marginTop: '20px' }}>
+                  <h4>🔍 Roteiro do Deploy Real:</h4>
+                  <p style={{ marginTop: '8px' }}>1. Acesse o servidor remoto de produção (via SSH).</p>
+                  <p style={{ marginTop: '8px' }}>2. Certifique-se de que o <strong>Docker</strong> e o <strong>Docker Compose</strong> estão instalados nele.</p>
+                  <p style={{ marginTop: '8px' }}>3. Transfira <strong>apenas</strong> o seu arquivo <code>docker-compose.yml</code> para o servidor usando scp:</p>
+                  <p style={{ color: 'var(--color-primary)', paddingLeft: '12px', fontFamily: 'var(--font-code)', fontSize: '12px', marginTop: '4px' }}>
                     scp docker-compose.yml usuario@ip-do-servidor:/home/usuario/app/
                   </p>
-                  <p>4. No servidor, acesse a pasta e rode: <strong>docker compose up -d</strong></p>
+                  <p style={{ marginTop: '8px' }}>4. No servidor, acesse a pasta e rode: <strong>docker compose up -d</strong></p>
                   <p style={{ color: 'var(--color-success)', marginTop: '8px' }}>
-                    ✔ Pronto! O Docker do servidor remoto baixa a imagem do Docker Hub e executa a app perfeitamente.
+                    ✔ O Docker do servidor remoto lê o compose, puxa a imagem do Docker Hub e inicializa a aplicação sem expor seu código fonte local.
                   </p>
                 </div>
               </div>
@@ -1468,118 +1100,6 @@ services:
             </div>
           </section>
         )}
-
-        {/* TAB 8: Playground do Terminal */}
-        {activeTab === 'playground' && (
-          <section className="tab-section fade-in">
-            <h1>Terminal Playground Interativo</h1>
-            <p className="subtitle">Execute comandos docker reais simulados e entre na sub-shell interativa do Ubuntu.</p>
-
-            <div className="playground-layout">
-              
-              {/* Terminal */}
-              <div className="terminal-box">
-                <div className="terminal-header">
-                  <div className="terminal-dots">
-                    <span className="dot red"></span>
-                    <span className="dot yellow"></span>
-                    <span className="dot green"></span>
-                  </div>
-                  <span className="terminal-title">
-                    {isUbuntuShell ? 'bash - root@ubuntu-container:~' : 'bash - docker@learning-host:~'}
-                  </span>
-                </div>
-
-                <div className="terminal-body">
-                  {terminalHistory.map((line, idx) => (
-                    <div key={idx} className={`terminal-line ${line.type}`}>
-                      {line.text}
-                    </div>
-                  ))}
-
-                  {/* Simulador de Barra de Progresso no Terminal */}
-                  {isTerminalLoading && (
-                    <div className="terminal-loader-line">
-                      <span className="loader-text">{terminalLoadingText}</span>
-                      <div className="terminal-progress-bar-bg">
-                        <div className="terminal-progress-bar-fill" style={{ width: `${terminalLoadingProgress}%` }}></div>
-                      </div>
-                      <span className="loader-percent">{terminalLoadingProgress}%</span>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleTerminalSubmit} className="terminal-form">
-                    <span className="terminal-prompt">
-                      {isUbuntuShell ? 'root@ubuntu-container:/# ' : 'docker@learning-host:~$ '}
-                    </span>
-                    <input 
-                      type="text" 
-                      value={terminalInput}
-                      onChange={(e) => setTerminalInput(e.target.value)}
-                      className="terminal-input-element"
-                      autoFocus
-                      disabled={isTerminalLoading}
-                    />
-                  </form>
-                  <div ref={terminalEndRef}></div>
-                </div>
-              </div>
-
-              {/* Status do Host Virtual */}
-              <div className="host-status-pane">
-                <div className="status-header">
-                  <h3>Estado do Docker Daemon</h3>
-                  <span className="active-pill">Ativo</span>
-                </div>
-                
-                <div className="status-section">
-                  <h4>Imagens Locais ({virtualImages.length})</h4>
-                  {virtualImages.length === 0 ? (
-                    <p className="no-item">Nenhuma imagem carregada.</p>
-                  ) : (
-                    <ul>
-                      {virtualImages.map((img, i) => (
-                        <li key={i}>
-                          <code>{img.name}:{img.tag}</code>
-                          <span className="meta-info">{img.size}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="status-section">
-                  <h4>Containers Ativos ({virtualContainers.filter(c => c.status.startsWith('Up')).length})</h4>
-                  {virtualContainers.filter(c => c.status.startsWith('Up')).length === 0 ? (
-                    <p className="no-item">Nenhum container ativo.</p>
-                  ) : (
-                    <ul>
-                      {virtualContainers.filter(c => c.status.startsWith('Up')).map((c, i) => (
-                        <li key={i}>
-                          <strong>{c.name}</strong> 
-                          <span className="meta-info">Portas: {c.ports}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="guide-box">
-                  <h4>Experimente rodar:</h4>
-                  <ul>
-                    <li><code>docker login</code></li>
-                    <li><code>docker build -t app:1.0 .</code></li>
-                    <li><code>docker run -it ubuntu bash</code></li>
-                    <li><code>docker run -d -p 8080:80 nginx</code></li>
-                    <li><code>docker ps -a</code></li>
-                  </ul>
-                </div>
-              </div>
-
-            </div>
-          </section>
-        )}
-
       </main>
     </div>
   );
