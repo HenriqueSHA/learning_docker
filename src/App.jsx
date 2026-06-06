@@ -204,6 +204,7 @@ const flagsList = [
 export default function App() {
   const [activeTab, setActiveTab] = useState('o-que-e');
   const [selectedInstruction, setSelectedInstruction] = useState(syntaxDictionary['FROM']);
+  const [activeDeployStep, setActiveDeployStep] = useState(1);
 
   // Estados dos Simuladores
   const [namespacePid, setNamespacePid] = useState(false);
@@ -671,6 +672,13 @@ export default function App() {
             <span>🌎</span> Procurar & Rodar
           </button>
           <button 
+            className={`nav-item ${activeTab === 'ciclo-completo' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ciclo-completo')}
+            id="tab-ciclo-completo"
+          >
+            <span>🚀</span> Ciclo Completo
+          </button>
+          <button 
             className={`nav-item ${activeTab === 'escrevendo' ? 'active' : ''}`}
             onClick={() => setActiveTab('escrevendo')}
             id="tab-escrevendo"
@@ -1054,6 +1062,144 @@ export default function App() {
               </div>
 
             </div>
+          </section>
+        )}
+
+        {/* TAB 4.5: Ciclo Completo (Build, Push, Compose, Deploy) */}
+        {activeTab === 'ciclo-completo' && (
+          <section className="tab-section fade-in">
+            <h1>Ciclo Completo: Build, Push, Compose & Deploy</h1>
+            <p className="subtitle">Aprenda a criar sua própria imagem, publicá-la em nuvem e rodar em qualquer servidor usando Docker Compose.</p>
+
+            {/* Wizard Navigation */}
+            <div className="deploy-steps-nav">
+              <button 
+                className={`deploy-step-btn ${activeDeployStep === 1 ? 'active' : ''}`}
+                onClick={() => setActiveDeployStep(1)}
+              >
+                1. Build (Criar Imagem)
+              </button>
+              <button 
+                className={`deploy-step-btn ${activeDeployStep === 2 ? 'active' : ''}`}
+                onClick={() => setActiveDeployStep(2)}
+              >
+                2. Push (Publicar)
+              </button>
+              <button 
+                className={`deploy-step-btn ${activeDeployStep === 3 ? 'active' : ''}`}
+                onClick={() => setActiveDeployStep(3)}
+              >
+                3. Compose (Orquestrar)
+              </button>
+              <button 
+                className={`deploy-step-btn ${activeDeployStep === 4 ? 'active' : ''}`}
+                onClick={() => setActiveDeployStep(4)}
+              >
+                4. Deploy (Servidor Remoto)
+              </button>
+            </div>
+
+            {/* Passo 1: Build */}
+            {activeDeployStep === 1 && (
+              <div className="premium-card fade-in">
+                <h2>🛠️ Passo 1: Criando a sua própria Imagem (Build)</h2>
+                <p style={{ marginTop: '10px', color: 'var(--text-muted)' }}>
+                  Após escrever o seu código e configurar o seu <code>Dockerfile</code> na pasta raiz do seu projeto, você precisa compilar esse conjunto em um arquivo de imagem executável.
+                </p>
+                <div className="code-example-box">
+                  <code>docker build -t seu-usuario/minha-app:1.0.0 .</code>
+                </div>
+                <div className="alert-box note" style={{ marginTop: '20px' }}>
+                  <h4>🔍 O que significa esse comando?</h4>
+                  <p style={{ marginTop: '8px' }}>
+                    <strong>docker build</strong>: Comando que lê o arquivo Dockerfile do seu projeto e executa as instruções de compilação.
+                  </p>
+                  <p style={{ marginTop: '8px' }}>
+                    <strong>-t seu-usuario/minha-app:1.0.0</strong>: Define o nome da imagem (<code>minha-app</code>) e a versão/tag (<code>1.0.0</code>) associada ao seu nome de usuário.
+                  </p>
+                  <p style={{ marginTop: '8px' }}>
+                    <strong>. (ponto)</strong>: Indica que o contexto de build é a pasta atual. O Docker buscará o Dockerfile e os arquivos do código nesta pasta.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Passo 2: Push */}
+            {activeDeployStep === 2 && (
+              <div className="premium-card fade-in">
+                <h2>☁️ Passo 2: Publicando a Imagem no Docker Hub (Push)</h2>
+                <p style={{ marginTop: '10px', color: 'var(--text-muted)' }}>
+                  Com a imagem gerada localmente, o próximo passo é enviá-la para o <strong>Docker Hub</strong> (o registro oficial na nuvem) para que ela possa ser acessada e baixada de qualquer lugar.
+                </p>
+                
+                <h4 style={{ marginTop: '20px', marginBottom: '8px' }}>1. Autentique seu terminal:</h4>
+                <div className="code-example-box">
+                  <code>docker login</code>
+                </div>
+                
+                <h4 style={{ marginTop: '20px', marginBottom: '8px' }}>2. Faça o upload da imagem:</h4>
+                <div className="code-example-box">
+                  <code>docker push seu-usuario/minha-app:1.0.0</code>
+                </div>
+                
+                <div className="alert-box warning" style={{ marginTop: '20px' }}>
+                  <h4>💡 Inteligência de Camadas (Cache)</h4>
+                  <p>O Docker envia a imagem dividida em camadas. Se você fizer modificações futuras no seu código e fizer um novo build/push, o Docker enviará apenas as camadas contendo as novas alterações, economizando banda e tempo!</p>
+                </div>
+              </div>
+            )}
+
+            {/* Passo 3: Compose */}
+            {activeDeployStep === 3 && (
+              <div className="premium-card fade-in">
+                <h2>📦 Passo 3: Orquestrando com Docker Compose</h2>
+                <p style={{ marginTop: '10px', color: 'var(--text-muted)' }}>
+                  Para evitar ter de digitar comandos <code>docker run</code> imensos no terminal para cada container, declaramos toda a arquitetura da nossa aplicação em um arquivo <code>docker-compose.yml</code>.
+                </p>
+                
+                <div className="detail-example" style={{ marginTop: '20px' }}>
+                  <strong>Estrutura recomendada para o arquivo docker-compose.yml:</strong>
+                  <pre style={{ color: '#6ee7b7' }}>{`version: '3.8'
+
+services:
+  web:
+    image: seu-usuario/minha-app:1.0.0
+    container_name: meu-servico-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped`}</pre>
+                </div>
+
+                <h4 style={{ marginTop: '20px', marginBottom: '8px' }}>Iniciar os serviços declarados no compose:</h4>
+                <div className="code-example-box">
+                  <code>docker compose up -d</code>
+                </div>
+              </div>
+            )}
+
+            {/* Passo 4: Deploy */}
+            {activeDeployStep === 4 && (
+              <div className="premium-card fade-in">
+                <h2>🚀 Passo 4: Fazendo Deploy em Outra Máquina (Servidor / VPS)</h2>
+                <p style={{ marginTop: '10px', color: 'var(--text-muted)' }}>
+                  Levar a sua aplicação para rodar em produção (ex: nuvens como AWS EC2, Google Cloud, DigitalOcean) é extremamente simples com o Docker. Você <strong>não</strong> precisa copiar seus códigos fontes para a máquina.
+                </p>
+
+                <div className="visualizer-box" style={{ marginTop: '20px', border: '1px solid var(--color-primary)' }}>
+                  <p className="system-line">[ Roteiro do Deploy Real ]</p>
+                  <p>1. Acesse o servidor remoto de produção (via SSH).</p>
+                  <p>2. Certifique-se de que o <strong>Docker</strong> e o <strong>Docker Compose</strong> estão instalados nele.</p>
+                  <p>3. Transfira <strong>apenas</strong> o seu arquivo <code>docker-compose.yml</code> para o servidor:</p>
+                  <p style={{ color: 'var(--color-primary)', paddingLeft: '12px' }}>
+                    scp docker-compose.yml usuario@ip-do-servidor:/home/usuario/app/
+                  </p>
+                  <p>4. No servidor, acesse a pasta e rode: <strong>docker compose up -d</strong></p>
+                  <p style={{ color: 'var(--color-success)', marginTop: '8px' }}>
+                    ✔ Pronto! O Docker do servidor remoto baixa a imagem do Docker Hub e executa a app perfeitamente.
+                  </p>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
