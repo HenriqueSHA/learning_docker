@@ -232,3 +232,93 @@ As **flags** modificam o comportamento padrão de comandos de execução (`run`,
 | **`-t`** (no build)| Tag | Define o nome e a tag de versão da imagem gerada pelo build. | `docker build -t app:1.0 .` |
 | **`-f`** | File | Aponta para um arquivo de configuração com nome diferente do padrão. | `docker compose -f docker-compose.prod.yml up` |
 | **`-f`** (force) | Force | Força a remoção de um container ou imagem ativa sem dar aviso prévio. | `docker rm -f meu-container` |
+
+---
+
+## 🚀 Ciclo Completo: Criar, Publicar, Orquestrar e Deployar
+
+Abaixo está o passo a passo prático de como tirar uma aplicação do seu computador, transformá-la em uma imagem Docker, publicá-la em nuvem e rodá-la em qualquer outro servidor no mundo.
+
+### 1️⃣ Criando sua Própria Imagem (Build)
+Após escrever o seu código e configurar o seu `Dockerfile` na pasta raiz do seu projeto, você precisa compilar esse conjunto em um arquivo de imagem executável.
+
+Rode o comando abaixo substituindo `seu-usuario` pelo seu nome de usuário do Docker Hub:
+```bash
+docker build -t seu-usuario/minha-app:1.0.0 .
+```
+> 💡 **O que significa esse comando?**
+> * **`docker build`**: Comando que lê o arquivo `Dockerfile` e executa as instruções de compilação.
+> * **`-t` (tag)**: Define o nome da imagem (`minha-app`) e a versão/tag (`1.0.0`) associada ao seu usuário.
+> * **`.` (ponto)**: Indica que o contexto de build é a pasta atual. O Docker usará os arquivos deste diretório para enviar ao daemon de compilação.
+
+---
+
+### 2️⃣ Publicando a Imagem no Docker Hub (Push)
+Com a imagem gerada localmente, o próximo passo é enviá-la para o **Docker Hub** (o registro em nuvem oficial do Docker) para que ela possa ser acessada de qualquer lugar.
+
+1. **Autentique-se no terminal:**
+   ```bash
+   docker login
+   ```
+   *Insira seu usuário e senha do Docker Hub quando solicitado.*
+
+2. **Envie a imagem:**
+   ```bash
+   docker push seu-usuario/minha-app:1.0.0
+   ```
+   *O Docker fará o upload das camadas da sua imagem para os servidores da nuvem.*
+
+---
+
+### 3️⃣ Orquestrando com Docker Compose
+Para facilitar a execução local ou remota (sem precisar digitar comandos `docker run` gigantescos cheios de flags no terminal), utilizamos o **Docker Compose**. 
+
+Crie um arquivo chamado `docker-compose.yml` na raiz do seu projeto com a seguinte estrutura:
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    image: seu-usuario/minha-app:1.0.0
+    container_name: meu-servico-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+```
+
+* **`services`**: Define os containers que farão parte do seu projeto.
+* **`image`**: Aponta para a imagem que acabamos de publicar no Docker Hub.
+* **`ports`**: Mapeia a porta `8080` do computador físico para a porta `80` interna do container.
+* **`restart: unless-stopped`**: Garante que o container reinicie automaticamente se falhar ou se o servidor for reiniciado.
+
+Para iniciar os serviços localmente através do compose:
+```bash
+docker compose up -d
+```
+
+---
+
+### 4️⃣ Fazendo Deploy em Outra Máquina (Servidor / VPS)
+Fazer o deploy da sua aplicação em um servidor remoto (ex: AWS, Google Cloud, DigitalOcean, ou qualquer outra máquina Linux) agora é extremamente simples. Você **não** precisa copiar os arquivos de código-fonte da aplicação para o servidor. 
+
+Siga este roteiro:
+
+1. **Prepare o Servidor de Destino:**
+   Acesse o servidor remoto (geralmente via SSH) e certifique-se de que o **Docker** e o **Docker Compose** estão instalados nele.
+   
+2. **Copie Apenas o Arquivo de Orquestração:**
+   Transfira apenas o arquivo `docker-compose.yml` do seu computador local para uma pasta no servidor remoto. Você pode fazer isso usando o comando `scp` no terminal local:
+   ```bash
+   scp docker-compose.yml usuario@ip-do-servidor:/home/usuario/app/
+   ```
+   *Alternativamente, você pode criar o arquivo diretamente no servidor via editor nano/vim ou clonar um repositório git que o contenha.*
+
+3. **Inicie o Container no Servidor:**
+   Acesse a pasta onde colocou o arquivo no servidor e execute:
+   ```bash
+   docker compose up -d
+   ```
+   
+4. **O que acontece sob o capô?**
+   O Docker do servidor remoto lerá o `docker-compose.yml`, perceberá que a imagem `seu-usuario/minha-app:1.0.0` não existe localmente na máquina dele, e fará o **pull** automático direto do seu repositório no Docker Hub, iniciando a aplicação de forma idêntica e instantânea!
